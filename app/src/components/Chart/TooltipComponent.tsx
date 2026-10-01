@@ -1,29 +1,23 @@
-import React, { memo, useEffect, useRef } from 'react'
+import React, { memo } from 'react'
 import { alpha as fade, useTheme } from '@mui/material/styles'
-import { Fade, Grow, Paper, Popper, PopperProps, Typography } from '@mui/material'
+import { Fade, Grow, Paper, Popper, Typography } from '@mui/material'
 import { Tooltip } from './Model'
-
-type PopperInstance = NonNullable<PopperProps['popperRef']> extends React.Ref<infer T> ? T : never
 
 function TooltipComponent(props: { tooltip?: Tooltip }) {
   const theme = useTheme()
   const { tooltip } = props
-  const popperRef = useRef<PopperInstance | null>(null)
 
-  // The anchor may be a virtual element whose position changes without React noticing,
-  // so ask Popper to re-measure it whenever the tooltip content updates.
-  useEffect(() => {
-    popperRef.current?.update()
-  }, [tooltip])
-
+  // Note: Popper's `transition` prop must not be used here. It requires a render-function child
+  // that wires up TransitionProps; with plain JSX children Popper never leaves its "exited" state
+  // and never positions itself. The Fade/Grow below provide the enter animation instead.
+  // Popper re-measures the anchor on every render, so a virtual anchor that follows the pointer
+  // is picked up automatically.
   return (
     <Popper
       style={{ pointerEvents: 'none', ...(tooltip ? { transition: 'all 0.1s ease-out' } : {}) }}
       open={Boolean(tooltip)}
-      transition
       placement="top"
       anchorEl={tooltip && tooltip.element}
-      popperRef={popperRef}
     >
       <div
         style={{
